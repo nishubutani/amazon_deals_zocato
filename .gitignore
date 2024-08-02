@@ -4,8 +4,11 @@ __pycache__/
 *$py.class
 
 # C extensions
-*.so
 
+files/
+*.so
+.idea/
+myvenv/
 # Distribution / packaging
 .Python
 build/
