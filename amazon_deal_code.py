@@ -105,8 +105,8 @@ response = get_response_with_retries('https://data.amazon.com/api/marketplaces/A
 
 if response and response.status_code == 200:
     data = response.json()
-    # ranked_promotions = data.get('entity', {}).get('rankedPromotions', [])
-    ranked_promotions = data.get('entity', {}).get('rankedPromotions', [])[:10]  # Limit to first 10 promotions
+    ranked_promotions = data.get('entity', {}).get('rankedPromotions', [])
+    #ranked_promotions = data.get('entity', {}).get('rankedPromotions', [])[:10]  # Limit to first 10 promotions
     logging.info(f"file Generated: files/{len(ranked_promotions)}")
 
     product_data_list = []
