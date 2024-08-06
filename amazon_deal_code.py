@@ -1,4 +1,6 @@
 import json
+import logging
+import os
 import time
 import random
 import pandas as pd
@@ -7,34 +9,47 @@ from parsel import Selector
 from datetime import datetime
 
 
-scrape_type = "discount"
+# Ensure the logs directory exists
+if not os.path.exists('logs'):
+    os.makedirs('logs')
+
+# Configure logging to a file in the "logs" directory, organized by day
+today_date = datetime.now().strftime("%d_%m_%Y")
+log_filename = f'logs/scraper_log_{today_date}.log'
+logging.basicConfig(filename=log_filename, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+
+# scrape_type = "discount"
 params = {}
 
-if scrape_type == "deals":
+scraper_type = int(input("please select the scraper_type\n\n\t 1.deals\n\t 2.discount \n\n\tEnter here :-"))
+
+if scraper_type == 1:
+# if scrape_type == "deals":
     params['filters'] = '{"includedDepartments":[],"excludedDepartments":[],"includedTags":[],"excludedTags":["restrictedasin","noprime","GS_DEAL","StudentDeal"],"promotionTypes":[],"accessTypes":[]}'
     params['refinementFilters'] = '[{"id":"reviewRating","value":["4"]},{"id":"price","value":["2"]},{"id":"percentOff","value":["3"]}]'
-elif scrape_type == "discount":
+elif scraper_type == 2:
+# elif scrape_type == "discount":
     params['filters'] = '{"includedDepartments":[],"excludedDepartments":[],"includedTags":[],"excludedTags":["restrictedasin","noprime","GS_DEAL","StudentDeal"],"promotionTypes":["COUPON"],"accessTypes":[]}'
     params['refinementFilters'] = '[{"id":"reviewRating","value":["4"]},{"id":"price","value":["2"]},{"id":"percentOff","value":["3"]},{"id":"departments","value":["11055981"]}]'
+else:
+    print("")
 
-cookies = {
-    # 'session-id': '139-5319982-5406647',
-    'session-id': '147-2845108-4886318',
-    # 'session-id-time': '2082787201l',
-    'session-id-time': '2082787201l',
-    'lc-main': 'en_US',
-    'i18n-prefs': 'INR',
-    # 'ubid-main': '135-9624645-9041922',
-    'ubid-main': '131-1740196-4335608',
-    'sp-cdn': '"L5Z9:IN"',
-    # 'session-token': 'raq6p4LiaINGOcLeitHGGZp3P7UqT6EsJ/jfh39dfqwvHMMJTNLfA1hu2X7hlzoRVQhcfrHoWnkqoEiFJpZ4PSUnqX5ave3YdCI0mfLUiSi8rmdVXuvm0wM2pZDgsj7dxiqTBMs1u00+jAQZDDxXUNjulumxggIzw6/+DcePwpWXRAvfKiqKsVzdWQBCasjGHDdyQ7c/HwvnMwcN/3SFToW4Fn1wl7aJr9P4ec3q1pou+UyicAFcXlMBN/UD/BeEdezsK0JQIKRw7DQBYwnYI6rY6RWJHIZBSCiCQhlRdspcp6TM5GCSS6zdDMp720AnwQ2GtLK7YuJ2djg4U1Ct10E21bRPT/8M',
-    'session-token': 'ZtznrN9TK86EHcyG01hQokOA8bqCTZIZNBTqRL9R99pNKRIjYa5972mgG/hzgg4FR+3Za9tUy+SL2dNA+bZQ3M0QfVtw8o5GTZsnQHpKw1CSy10TIX0TjBiymdaxozADDjxottjozTKXgnmuiBv5qNvhfrjqfKXvaWOkTXqaWcb0PC69sVWrHQpOiXp/rOTuoq/A0WHEnwpvdSigM2s+pd18NPfF4+gdEkTNKynCfSpT97OOy0JoX7bmH51HmuaMl312u5cvA1ixtYqJBcjNLut/vWHeCT8GKKBV9lmsg1xBGOxaF+pvy3L6/IhfIuXCnohVyxAAIvDaHLx4JeSDJ1H0LLRTwrLv',
-}
+# cookies = { # 'session-id': '139-5319982-5406647', 'session-id': '147-2845108-4886318', # 'session-id-time':
+#     '2082787201l', 'session-id-time': '2082787201l', 'lc-main': 'en_US', 'i18n-prefs': 'INR', # 'ubid-main':
+#     '135-9624645-9041922', 'ubid-main': '131-1740196-4335608', 'sp-cdn': '"L5Z9:IN"', # 'session-token':
+#     'raq6p4LiaINGOcLeitHGGZp3P7UqT6EsJ/jfh39dfqwvHMMJTNLfA1hu2X7hlzoRVQhcfrHoWnkqoEiFJpZ4PSUnqX5ave3YdCI0mfLUiSi8rmdVXuvm0wM2pZDgsj7dxiqTBMs1u00+jAQZDDxXUNjulumxggIzw6/+DcePwpWXRAvfKiqKsVzdWQBCasjGHDdyQ7c/HwvnMwcN/3SFToW4Fn1wl7aJr9P4ec3q1pou+UyicAFcXlMBN/UD/BeEdezsK0JQIKRw7DQBYwnYI6rY6RWJHIZBSCiCQhlRdspcp6TM5GCSS6zdDMp720AnwQ2GtLK7YuJ2djg4U1Ct10E21bRPT/8M', 'session-token': 'ZtznrN9TK86EHcyG01hQokOA8bqCTZIZNBTqRL9R99pNKRIjYa5972mgG/hzgg4FR+3Za9tUy+SL2dNA+bZQ3M0QfVtw8o5GTZsnQHpKw1CSy10TIX0TjBiymdaxozADDjxottjozTKXgnmuiBv5qNvhfrjqfKXvaWOkTXqaWcb0PC69sVWrHQpOiXp/rOTuoq/A0WHEnwpvdSigM2s+pd18NPfF4+gdEkTNKynCfSpT97OOy0JoX7bmH51HmuaMl312u5cvA1ixtYqJBcjNLut/vWHeCT8GKKBV9lmsg1xBGOxaF+pvy3L6/IhfIuXCnohVyxAAIvDaHLx4JeSDJ1H0LLRTwrLv', }
 
-# with open('cookies.json', 'r') as f:
-#     cookies = json.load(f)
-# cookies = {cookie['name']: cookie['value'] for cookie in cookies}
-# print(cookies)
+try:
+    with open('data.json', 'r') as f:
+        cookies1 = json.load(f)
+        cookies = cookies1['cookies']
+        slate_token = cookies1['slate_token']
+        csrf_token = cookies1['csrf_token']
+        logging.info("Successfully loaded cookies and tokens from data.json")
+except Exception as e:
+    logging.error(f"Failed to load cookies and tokens: {e}")
+    exit()
 
 
 headers = {
@@ -52,9 +67,10 @@ headers = {
     'sec-fetch-site': 'same-site',
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36',
     # 'x-amzn-encrypted-slate-token': 'AnYxFaujBfG7Tt6kcxxkLvd14HLXqE1q7ttjNzvHHCydkbYvV1aJiXDObq4MdCALVR1SRzJVMchvLa5JnGAmG4nwSanrxh27ebk4bgkcYEA2F9AyJQtAvCIhwP3m1pTjIHsJgH75aKFq5S/jv5qgwbVXl4/2iVn00oaFywNLHTlFPGkZwgcG1FptnJQ51YnC9+8/XX0e0bFs9s5QDvuKoTbVPTJ97FYfmdS+nAf0etsOaeonf86Un4yLlX3V2hCiPNvq8WR4E1NCoVgVNB02tD+vbZM0Axg=',
-    'x-amzn-encrypted-slate-token': 'AnYxqu1pfmzNNCd2NUYpe83AU9RxlJSofca4kwi5Xgn3EUIK4TKcr8vdpbTFnDoMSFqwk4d4HE0h+uqNZ866/xM7xjjkdDQr9wsNrny7I3gZkaDY9XMhmKss424G6HS6HFnDjQBV3xx1r1Rm1opbWYkolaMuvMoVnrXaK6KwtKrYdyV8Ca//Uj6VPL3DyEPhR2NJT5jlnx6fuC+jtdavWAYTWr5l/+UeCKo21d+MEoIkKU/bf9daU/rzTLR3EyAI+DbNDgmy0AbmWWqFixuUx6TqEEifjg==',
+    # 'x-amzn-encrypted-slate-token': 'AnYxqu1pfmzNNCd2NUYpe83AU9RxlJSofca4kwi5Xgn3EUIK4TKcr8vdpbTFnDoMSFqwk4d4HE0h+uqNZ866/xM7xjjkdDQr9wsNrny7I3gZkaDY9XMhmKss424G6HS6HFnDjQBV3xx1r1Rm1opbWYkolaMuvMoVnrXaK6KwtKrYdyV8Ca//Uj6VPL3DyEPhR2NJT5jlnx6fuC+jtdavWAYTWr5l/+UeCKo21d+MEoIkKU/bf9daU/rzTLR3EyAI+DbNDgmy0AbmWWqFixuUx6TqEEifjg==',
+    'x-amzn-encrypted-slate-token': slate_token,
     # 'x-api-csrf-token': '1@g40wFa56M2hp3AImxWzRaStETGl/vsvrqRHATW9WcSQAAAAAAQAAAABmpeU/cmF3AAAAAGfA1H5nd8xGEcC33NuKVw==@RQ2CWZ',
-    'x-api-csrf-token': '1@g2t2XWYdcm+2sr+KG4NfXLMRQP/FYUalQsg6BmvgO5CZAAAAAQAAAABmrHPHcmF3AAAAAGfA1H5nd8xGEcC33NuKVw==@RQ2CWZ',
+    'x-api-csrf-token': csrf_token,
     'x-cc-currency-of-preference': 'INR',
 }
 
@@ -70,23 +86,28 @@ params.update({
 
 def get_response_with_retries(url, params, headers, cookies, max_retries=5):
     for attempt in range(max_retries):
-        response = requests.get(url, params=params, headers=headers, cookies=cookies)
-        if response.status_code == 200:
-            return response
-        elif response.status_code == 503:
-            print(f"Attempt {attempt+1} failed with status code 503. Retrying...")
-            time.sleep(random.uniform(5.05, 15.0))
+        try:
+            response = requests.get(url, params=params, headers=headers, cookies=cookies)
+            if response.status_code == 200:
+                logging.info(f"Attempt {attempt + 1} succeeded with status code 200")
+                return response
+            elif response.status_code == 503:
+                logging.warning(f"Attempt {attempt + 1} failed with status code 503. Retrying...")
+                time.sleep(random.uniform(5.05, 15.0))
+            else:
+                logging.error(f"Attempt {attempt + 1} failed with unexpected status code {response.status_code}")
+        except Exception as e:
+            logging.error(f"Attempt {attempt + 1} encountered an error: {e}")
+
     return None
 
 response = get_response_with_retries('https://data.amazon.com/api/marketplaces/ATVPDKIKX0DER/promotions', params, headers, cookies)
 
 if response and response.status_code == 200:
     data = response.json()
-    ranked_promotions = data.get('entity', {}).get('rankedPromotions', [])
-    # ranked_promotions = data.get('entity', {}).get('rankedPromotions', [])[:10]  # Limit to first 10 promotions
-
-
-    print(f"Total ranked promotions: {len(ranked_promotions)}")
+    # ranked_promotions = data.get('entity', {}).get('rankedPromotions', [])
+    ranked_promotions = data.get('entity', {}).get('rankedPromotions', [])[:10]  # Limit to first 10 promotions
+    logging.info(f"file Generated: files/{len(ranked_promotions)}")
 
     product_data_list = []
 
@@ -104,13 +125,15 @@ if response and response.status_code == 200:
                 txt = promotion['product']['entity']['buyingOptions'][0]['promotionsUnified']['entity']['displayablePromotions'][0]['claimAjaxPostLink']['data'].get('successText', '')
                 if txt:
                     discount_text = txt.split("</b>")[1].split("<")[0].strip()
-            except:
-                pass
+            except Exception as e:
+                logging.warning(f"Failed to parse discount text: {e}")
+                discount_text = ''
 
             try:
                 discount = promotion['product']['entity']['buyingOptions'][0]['dealBadge']['entity']['label']['content']['fragments']
-            except:
-                pass
+            except Exception as e:
+                logging.warning(f"Failed to parse discount: {e}")
+                discount = ''
 
             try:
                 image_data = promotion['product']['entity']['productImages']['entity']['images']
@@ -120,16 +143,20 @@ if response and response.status_code == 200:
                     hi_res_url = f"{base_url}{image['hiRes']['physicalId']}.{image['hiRes']['extension']}"
                     low_res_url = f"{base_url}{image['lowRes']['physicalId']}.{image['lowRes']['extension']}"
                     product_images.extend([hi_res_url, low_res_url])
-            except:
-                pass
+            except Exception as e:
+                logging.warning(f"Failed to parse product images: {e}")
+                product_images = []
 
             for attempt in range(3):
-                product_response = requests.get(product_url, headers=headers)
-                if product_response.status_code == 200:
-                    break
-                else:
-                    print(f"Attempt {attempt+1} to get product details failed. Retrying...")
-                    time.sleep(random.uniform(1.05, 5.0))
+                try:
+                    product_response = requests.get(product_url, headers=headers)
+                    if product_response.status_code == 200:
+                        break
+                    else:
+                        print(f"Attempt {attempt+1} to get product details failed. Retrying...")
+                        time.sleep(random.uniform(1.05, 5.0))
+                except Exception as e:
+                    logging.error(f"Attempt {attempt + 1} encountered an error: {e}")
 
             if product_response.status_code == 200:
                 selector = Selector(product_response.text)
@@ -163,17 +190,18 @@ if response and response.status_code == 200:
 
                 product_data_list.append(item)
                 count = count + 1
-                print("data inserted",count)
+                logging.info(f"Data inserted: {count}")
                 time.sleep(random.uniform(1.05, 5.0))
         except:
             pass
 
     today_date = datetime.now().strftime("%d_%m_%Y")
-    csv_file = f'{scrape_type}_output_{today_date}.csv'
+    csv_file = f'{scraper_type}_output_{today_date}.csv'
 
-    # df = pd.DataFrame(product_data_list)
+
     df = pd.DataFrame(product_data_list, index=range(1, len(product_data_list) + 1))
-    df.to_csv(csv_file, index=False)
+    df.to_csv(f'files/{csv_file}', index=False)
+    logging.info(f"file Generated: files/{csv_file}")
 
 else:
-    print("Failed to retrieve data after multiple attempts.")
+    logging.info(f"Failed to retrieve data after multiple attempts.")
